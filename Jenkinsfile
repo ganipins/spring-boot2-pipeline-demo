@@ -1,16 +1,34 @@
 pipeline {
   agent any
+  
+  environment {
+    EMAIL_RECIPIENTS = 'sam@test.com'
+  }
+  
+  triggers {
+      pollSCM('*/5 * * * *')
+  }
+
   stages {
     stage('Build') {
       steps {
         echo 'Building...'
+        gradlew('clean', 'build')
       }
     }
+    
     stage('Unit Tests') {
       steps {
         echo 'Unit Testing...'
+        gradlew('test')
+      }
+      post {
+          always {
+              junit '**/build/test-results/test/TEST-*.xml'
+          }
       }
     }
+    
     stage('Verification') {
       parallel {
         stage('Code Analysis') {
@@ -28,11 +46,16 @@ pipeline {
     stage('Package') {
       steps {
         echo 'Packaging...'
+        gradlew('assemble')
+        stash includes: '**/build/libs/*.war', name: 'app'
       }
     }
     stage('Approve') {
       steps {
         echo 'Approve'
+        timeout(time: 1, unit:'DAYS') {
+            input 'Deploy to Production?'
+        }
       }
     }
     stage('Deploy to Production') {
@@ -41,7 +64,17 @@ pipeline {
       }
     }
   }
-  environment {
-    EMAIL_RECIPIENTS = 'sam@test.com'
+  post {
+     failure {
+         mail to: 'sam.test@gmail.com', subject: 'Build failed', body: 'Please fix!'
+     }
   }
+}
+  
+def gradlew(String... args) {
+    if (isUnix()) {
+       sh "./gradlew ${args.join(' ')} -s"
+    } else {
+       bat("./gradlew ${args.join(' ')} -s")       
+    }
 }
