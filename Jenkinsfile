@@ -1,15 +1,12 @@
 pipeline {
   agent any
   
+  tools {
+    jdk 'jdk1.8.0_181'
+  }
+  
   environment {
     EMAIL_RECIPIENTS = 'sam@test.com'
-    
-    env.JAVA_HOME="${tool 'jdk1.8.0_181'}"
-    env.PATH="${env.JAVA_HOME}/bin:${env.PATH}"
-    
-    echo "JDK installation path is: ${env.JAVA_HOME}"
-    echo "env PATH is: ${env.PATH}"
-      
   }
   
   triggers {
@@ -19,7 +16,9 @@ pipeline {
   stages {
     stage('Build') {
       steps {
-        echo 'Building...'
+        echo 'Building...'    
+        echo "JDK installation path is: ${env.JAVA_HOME}"
+        echo "env PATH is: ${env.PATH}"
         gradlew('clean', 'build')
       }
     }
