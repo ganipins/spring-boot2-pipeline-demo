@@ -3,6 +3,13 @@ pipeline {
   
   environment {
     EMAIL_RECIPIENTS = 'sam@test.com'
+    
+    env.JAVA_HOME="${tool 'jdk1.8.0_181'}"
+    env.PATH="${env.JAVA_HOME}/bin:${env.PATH}"
+    
+    echo "JDK installation path is: ${env.JAVA_HOME}"
+    echo "env PATH is: ${env.PATH}"
+      
   }
   
   triggers {
