@@ -10,12 +10,20 @@ buildscript {
 	}
 }
 
+plugins {
+  id "org.sonarqube" version "2.6.2"
+}
+
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
+apply plugin: 'application'
+apply plugin: 'jacoco'
 
-group = 'com.example.pipeline'
+mainClassName='com.example.pipeline.SpringBoot2PipelineDemoApplication'
+
+group = 'spring-boot2-pipeline-app'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = 1.8
 

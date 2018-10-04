@@ -52,8 +52,8 @@ pipeline {
     stage('Package') {
       steps {
         echo 'Packaging...'
-        gradlew('assemble')
-        stash includes: '**/build/libs/*.war', name: 'app'
+        gradlew('bootJar')
+        stash includes: '**/build/libs/*.jar', name: 'spring-boot2-pipeline-demo'
       }
     }
     stage('Approve') {
