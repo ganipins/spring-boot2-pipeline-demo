@@ -3,6 +3,7 @@ pipeline {
   
   tools {
     jdk 'jdk1.8.0_181'
+    gradle 'gradle-4.10.2'
   }
   
   environment {
@@ -10,16 +11,26 @@ pipeline {
   }
   
   triggers {
-      pollSCM('*/5 * * * *')
+      pollSCM('H/5 * * * *')
   }
 
   stages {
+    stage('Initialize') {
+       steps {
+           echo 'Initializing...'    
+           echo "JDK installation path is: ${env.JAVA_HOME}"
+           echo "Gradle installation path is: ${env.GRADLE}"
+           echo "env PATH is: ${env.PATH}"
+           echo "Starting Build, triggered by $BRANCH_NAME";
+           echo "Building ${env.BUILD_ID}";
+           echo "Job: ${env.JOB_NAME} with buildnumber ${env.BUILD_NUMBER}"
+       }
+    }
+
     stage('Build') {
       steps {
-        echo 'Building...'    
-        echo "JDK installation path is: ${env.JAVA_HOME}"
-        echo "env PATH is: ${env.PATH}"
-        gradlew('clean', 'build')
+         echo 'Building...'
+         gradlew('clean', 'build')
       }
     }
     
@@ -56,6 +67,16 @@ pipeline {
         stash includes: '**/build/libs/*.jar', name: 'spring-boot2-pipeline-demo'
       }
     }
+    
+    stage('Deploy to Test') {
+        when { branch 'test' } 
+        steps {
+            script {
+                echo "Deploying  to Test"
+            }
+        }
+    }
+    
     stage('Approve') {
       steps {
         echo 'Approve'
@@ -65,14 +86,30 @@ pipeline {
       }
     }
     stage('Deploy to Production') {
+      when {
+          branch 'master'
+      }
+
       steps {
-        echo 'Deploying'
+        echo 'Deploying Master branch to Production'
       }
     }
+    
+    stage('slack-notify') {
+        steps {
+            echo 'slack-notify'
+        }
+    }
+    
   }
   post {
+     always {
+         archiveArtifacts artifacts: 'build/libs/**/*.jar', fingerprint: true
+         junit 'build/reports/**/*.xml'
+     }
+
      failure {
-         mail to: 'sam.test@gmail.com', subject: 'Build failed', body: 'Please fix!'
+         mail to: 'sam.test@gmail.com', subject: 'Build failed', body: 'Please fix the build ASAP!'
      }
   }
 }
